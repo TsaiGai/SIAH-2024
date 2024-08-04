@@ -11,11 +11,6 @@ def extract_features(file_path):
     try:
         y, sr = librosa.load(file_path)
 
-        # bpm = librosa.beat.beat_track(y=y, sr=sr)[0]
-        # bpm = bpm.item()
-        
-        # dynamics = np.mean(librosa.feature.rms(y=y))
-
         chromagram = librosa.feature.chroma_stft(y=y, sr=sr)
         mean_chroma = np.mean(chromagram, axis=1)
         if len(mean_chroma) < FIXED_CHROMA_LENGTH:
@@ -25,7 +20,6 @@ def extract_features(file_path):
         key = np.argmax(mean_chroma)
         rounded_key = round(key)
         
-        # return [bpm, dynamics, key] + list(mean_chroma)
         return rounded_key
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
@@ -46,10 +40,6 @@ for fp in file_paths:
     feature = extract_features(fp)
     if feature is not None:
         features.append(feature)
-
-# print(features)
-# feature_length = 3 + FIXED_CHROMA_LENGTH
-# features = np.array([f for f in features if len(f) == feature_length])
 
 # print(len(features))
 if len(features) < SEQUENCE_LENGTH:
@@ -80,8 +70,8 @@ input_dim = X.shape[2]
 
 X = X.reshape((number_of_samples, timesteps, input_dim))
 
-# print(X)
-# print(y)
+print(X)
+print(y)
 
 # save the data
 output_dir = 'preprocessed_data'

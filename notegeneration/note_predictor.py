@@ -82,52 +82,42 @@ from tensorflow.keras.utils import to_categorical
 X = np.load('preprocessed_data/X.npy')
 y = np.load('preprocessed_data/y.npy')
 
-# check if y needs to be one-hot encoded for multi-class classification
-if len(np.unique(y)) > 2:
-    y = to_categorical(y)
-    output_units = y.shape[1]
-    activation = 'softmax'
-    loss = 'categorical_crossentropy'
-else:
-    output_units = 1
-    activation = 'sigmoid'
-    loss = 'binary_crossentropy'
+# print shapes to verify
+print("Shape of X:", X.shape)  # Should be (34, 1, 1)
+print("Shape of y:", y.shape)  # Should be (34,)
+
+# ensure y has the correct shape
+y = y.reshape(-1)
 
 # define the model
 model = Sequential()
-model.add(LSTM(128, input_shape=(X.shape[1], X.shape[2]), return_sequences=True))
-model.add(LSTM(128))
-model.add(Dense(output_units, activation=activation))
+model.add(LSTM(50, input_shape=(1, 1)))  # only one LSTM layer is needed
+model.add(Dense(1))  # predicting a single next value
 
 # compile the model
-model.compile(loss=loss, optimizer='adam', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='mse')
 
 # train the model
-history = model.fit(X, y, validation_split=0.2, epochs=100, batch_size=64)
+history = model.fit(X, y, epochs=20, validation_split=0.2, batch_size=4)
 
-# sample input sequence from your data (e.g., the last sequence in X)
-input_sequence = X[-1]  # shape: (time_steps, features)
+# predict the next value for a given sequence
+# use the last available sequence for prediction
+# last_sequence = X[-1:]  # The last sequence in your dataset
+# predicted_next_value = model.predict(last_sequence)
+# print("Predicted next value:", predicted_next_value)
 
-# reshape input to match model's expected input shape: (1, time_steps, features)
-input_sequence = np.expand_dims(input_sequence, axis=0)  # shape: (1, time_steps, features)
+# predict the next 10 values
+n_steps = 20
+last_sequence = X[-1:]  # start with the last sequence in your dataset
+predicted_values = []
 
-# initialize the generated sequence with the input sequence
-generated_sequence = input_sequence.copy()
-
-print(generated_sequence)
-
-# predict the next 10 steps
-predicted_steps = []
-
-for _ in range(10):
-    # predict the next step
-    next_step = model.predict(generated_sequence)
+for _ in range(n_steps):
+    predicted_value = model.predict(last_sequence)
+    predicted_values.append(predicted_value[0, 0])
     
-    # append the predicted value to the sequence
-    predicted_steps.append(next_step[0, 0])  # Adjust indexing based on your model's output shape
-    
-    # update the input sequence: remove the first step and add the predicted step
-    next_step = next_step.reshape(1, 1, -1)
-    generated_sequence = np.append(generated_sequence[:, 1:, :], next_step, axis=1)
+    # update the sequence: remove the oldest value and append the predicted value
+    # last_sequence is of shape (1, 1, 1), predicted_value is of shape (1, 1)
+    predicted_value_reshaped = predicted_value.reshape(1, 1, 1)  # reshape for concatenation
+    last_sequence = np.append(last_sequence[:, 1:, :], predicted_value_reshaped, axis=1)
 
-print("Predicted next 10 steps:", predicted_steps)
+print("Predicted next values:", predicted_values)
