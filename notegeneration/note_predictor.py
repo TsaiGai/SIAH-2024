@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.utils import to_categorical
@@ -14,7 +14,7 @@ y = y.reshape(-1)
 # define the model
 model = Sequential()
 model.add(LSTM(50, input_shape=(1, 1)))  # only one LSTM layer is needed
-model.add(Dense(1))  # predicting a single next value
+model.add(Dense(20))  # predicting a single next value
 
 # compile the model
 model.compile(optimizer='adam', loss='mse')
@@ -42,5 +42,5 @@ for _ in range(n_steps):
     predicted_value_reshaped = predicted_value.reshape(1, 1, 1)  # reshape for concatenation
     last_sequence = np.append(last_sequence[:, 1:, :], predicted_value_reshaped, axis=1)
 
-print("Previously existing sequence:", last_sequence)
+print("Previously existing sequence:", y)
 print("Predicted next values:", predicted_values)
