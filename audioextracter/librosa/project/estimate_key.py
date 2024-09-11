@@ -38,10 +38,12 @@ def key_to_string(key):
     
     return keys[key]
 
-# example usage
-# -------------
-# filename = "audio/lark-call.wav"
-# y, sr = librosa.load(filename)
-# key_estimate = extract_key(y, sr)
+"""
+example usage
+-------------
+filename = "audio/lark-call.wav"
+y, sr = librosa.load(filename)
+key_estimate = extract_key(y, sr)
 
-# print(f"Estimated Key: {key_estimate}")
+print(f"Estimated Key: {key_estimate}")
+"""

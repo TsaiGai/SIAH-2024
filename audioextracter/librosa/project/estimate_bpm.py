@@ -25,10 +25,12 @@ def extract_bpm(y, sr):
     return tempo
 
 
-# example usage
-# -------------
-# filename = "audio/lark-call.wav"
-# y, sr = librosa.load(filename)
-# bpm = extract_bpm(y, sr)
+"""
+example usage
+-------------
+filename = "audio/lark-call.wav"
+y, sr = librosa.load(filename)
+bpm = extract_bpm(y, sr)
 
-# print(f"BPM: {bpm}")
+print(f"BPM: {bpm}")
+"""

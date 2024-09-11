@@ -68,17 +68,19 @@ def plot_dynamics(y, sr, rms, times):
     plt.tight_layout()
     plt.show()
 
-# example usage
-# -------------
-# filename = "audio/lark-call.wav"
-# y, sr = librosa.load(filename)
-# rms, times = get_dynamics(y, sr)
-# plot_dynamics(y, sr, rms, times)
+"""
+example usage
+-------------
+filename = "audio/lark-call.wav"
+y, sr = librosa.load(filename)
+rms, times = get_dynamics(y, sr)
+plot_dynamics(y, sr, rms, times)
 
-# extract and print statistics related to dynamics
-# dynamics_stats = analyze_dynamics(rms)
-# print(f"Mean RMS: {dynamics_stats['mean_rms']}")
-# print(f"Max RMS: {dynamics_stats['max_rms']}")
-# print(f"Min RMS: {dynamics_stats['min_rms']}")
-# print(f"Standard Deviation of RMS: {dynamics_stats['std_rms']}")
-# print(f"Dynamic Range: {dynamics_stats['dynamic_range']}")
+extract and print statistics related to dynamics
+dynamics_stats = analyze_dynamics(rms)
+print(f"Mean RMS: {dynamics_stats['mean_rms']}")
+print(f"Max RMS: {dynamics_stats['max_rms']}")
+print(f"Min RMS: {dynamics_stats['min_rms']}")
+print(f"Standard Deviation of RMS: {dynamics_stats['std_rms']}")
+print(f"Dynamic Range: {dynamics_stats['dynamic_range']}")
+"""
