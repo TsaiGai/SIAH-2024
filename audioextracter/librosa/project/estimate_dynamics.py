@@ -3,23 +3,31 @@ import librosa.display
 import numpy as np
 import matplotlib.pyplot as plt
 
-def get_dynamics(y, sr, frame_length=2048, hop_length=512):
+import librosa
+import numpy as np
+
+def get_dynamics(y, sr, frame_length=2048, hop_length=512, window='hamming'):
     """
-    calculate the RMS energy to measure audio dynamics.
+    Calculate the RMS energy to measure audio dynamics.
 
     Args:
         y (numpy.ndarray): audio time series.
         sr (int): sampling rate of `y`.
         frame_length (int): the length of each frame for RMS calculation.
         hop_length (int): the number of samples between frames.
+        window (str): window function to apply to the signal.
 
     Returns:
         tuple: RMS energy values and corresponding time stamps.
     """
+    # apply window function
+    window_func = getattr(np, window)
+    y_windowed = y * window_func(frame_length)
+
     # calculate the RMS energy
-    rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop_length)[0]
+    rms = librosa.feature.rms(y=y_windowed, frame_length=frame_length, hop_length=hop_length)[0]
     times = librosa.times_like(rms, sr=sr, hop_length=hop_length)
-    
+
     return rms, times
 
 def analyze_dynamics(rms):
