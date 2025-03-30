@@ -1,25 +1,5 @@
-import librosa
 import numpy as np
-
 import librosa
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-
-
-def key_to_string(key):
-    """
-    convert a key index to its corresponding musical key string.
-
-    Args:
-        key (int): index of the detected key.
-
-    Returns:
-        str: musical key name.
-    """
-    keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-    
-    return keys[key]
 
 # define the Krumhansl key profiles (major and minor)
 KRUMHANSL_MAJOR = np.array([
@@ -42,18 +22,18 @@ KRUMHANSL_MINOR = np.roll(KRUMHANSL_MAJOR, shift=3, axis=1)  # rotate profiles f
 KEY_NAMES_MAJOR = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 KEY_NAMES_MINOR = ["Cmin", "C#min", "Dmin", "D#min", "Emin", "Fmin", "F#min", "Gmin", "G#min", "Amin", "A#min", "Bmin"]
 
-def extract_key(y, sr):
+def extract_key_features(y, sr):
     """
-    Extracts the musical key of an audio signal.
+    Extracts features for musical key detection from an audio signal.
 
     Args:
-        y (numpy.ndarray): audio time series.
-        sr (int): sampling rate of `y`.
+        y (numpy.ndarray): Audio time series.
+        sr (int): Sampling rate of `y`.
 
     Returns:
-        str: estimated musical key (e.g., 'C', 'C#', 'D', etc.).
+        dict: A dictionary containing extracted key features.
     """
-    # validate inputs
+    # Validate inputs
     if not isinstance(y, np.ndarray):
         raise TypeError("Input audio signal must be a numpy array.")
     if not isinstance(sr, int) or sr <= 0:
@@ -62,78 +42,56 @@ def extract_key(y, sr):
         raise ValueError("Input audio signal is empty.")
 
     try:
-        # trim silence and normalize the audio
+        # Trim silence and normalize the audio
         y, _ = librosa.effects.trim(y, top_db=30)
         y = librosa.util.normalize(y)
 
-        # compute chromagram using constant-Q transform
+        # Compute chromagram using constant-Q transform
         chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
 
-        # compute mean chroma energy (ensure it has 12 elements)
-        mean_chroma = np.mean(chromagram, axis=1)  # Axis 1 gives one value per pitch class
+        # Compute mean and variance of chroma energy (12 features each)
+        mean_chroma = np.mean(chromagram, axis=1)  
+        var_chroma = np.var(chromagram, axis=1)
 
-        # compute similarity for both major and minor keys
+        # Compute correlation scores for each key profile
         correlations_major = [np.corrcoef(mean_chroma, key_profile)[0, 1] for key_profile in KRUMHANSL_MAJOR]
         correlations_minor = [np.corrcoef(mean_chroma, key_profile)[0, 1] for key_profile in KRUMHANSL_MINOR]
 
-        # find the best-matching key (higher correlation means better match)
+        # Find best-matching key indices
         best_major_index = np.argmax(correlations_major)
         best_minor_index = np.argmax(correlations_minor)
 
-        # choose the key with the highest correlation
+        # Choose the key with the highest correlation
         if correlations_major[best_major_index] > correlations_minor[best_minor_index]:
             key_estimate = KEY_NAMES_MAJOR[best_major_index]
+            key_mode = "major"
+            key_confidence = correlations_major[best_major_index]
         else:
             key_estimate = KEY_NAMES_MINOR[best_minor_index]
+            key_mode = "minor"
+            key_confidence = correlations_minor[best_minor_index]
 
-        return key_estimate
+        # Prepare feature dictionary
+        features = {
+            "mean_chroma": mean_chroma.tolist(),
+            "var_chroma": var_chroma.tolist(),
+            "correlations_major": correlations_major,
+            "correlations_minor": correlations_minor,
+            "key_estimate": key_estimate,
+            "key_mode": key_mode,
+            "key_confidence": key_confidence,
+        }
 
-    except librosa.ParameterError as e:
-        raise ValueError(f"Error processing audio signal: {e}")
+        return features
+
     except Exception as e:
-        raise RuntimeError(f"An error occurred: {e}")
-
-# def extract_key_over_time(file_path):
-#     """
-#     Extracts the musical key of an audio file every 5 seconds.
-
-#     Args:
-#         file_path (str): Path to the audio file.
-
-#     Returns:
-#         list: List of estimated keys (as strings) for each 5-second chunk.
-#     """
-#     # load the audio file
-#     y, sr = librosa.load(file_path)
-
-#     # define the chunk size (5 seconds)
-#     chunk_size = int(5 * sr)
-
-#     # initialize an empty list to store the estimated keys
-#     keys_over_time = []
-
-#     # loop through the audio file in chunks
-#     for i in range(0, len(y), chunk_size):
-#         # extract the current chunk
-#         chunk = y[i:i + chunk_size]
-
-#         # apply the extract_key method to the chunk
-#         key = extract_key(chunk, sr)
-
-#         # append the estimated key to the list
-#         keys_over_time.append(key)
+        raise RuntimeError(f"Error extracting key features: {e}")
     
-#     # convert list of keys into musical key strings
-#     keys_over_time = [key_to_string(key) for key in keys_over_time]
+# Load a test audio file (replace with an actual file path)
+y, sr = librosa.load("audio/birds3.mp3")
 
-#     return keys_over_time
+# Call the function
+key_features = extract_key_features(y, sr)
 
-"""
-example usage
--------------
-filename = "audio/lark-call.wav"
-y, sr = librosa.load(filename)
-key_estimate = extract_key(y, sr)
-
-print(f"Estimated Key: {key_estimate}")
-"""
+# Print the extracted features
+print("Extracted Key Features:", key_features)
